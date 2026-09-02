@@ -1,0 +1,13 @@
+*.lock
+build/
+.dart_tool/
+.packages
+.idea/
+*.iml
+.metadata
+.gradle/
+local.properties
+*.apk
+*.aab
+*.jks
+*.keystore
