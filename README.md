@@ -1,4 +1,4 @@
-# sci_kit
+# SciKit
 
 A new Flutter project.
 

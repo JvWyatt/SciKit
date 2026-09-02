@@ -1,4 +1,4 @@
-name: sci_kit
+name: scikit
 description: "SCIKIT - Plataforma modular de herramientas cientificas"
 publish_to: 'none'
 version: 1.0.0+1
