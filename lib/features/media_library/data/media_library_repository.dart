@@ -52,10 +52,12 @@ class MediaLibraryRepository {
 
   Future<List<Map<String, dynamic>>> getComponents(int mediaId) async {
     final db = await _database;
-    return db.query('components',
-        where: 'media_id = ?',
-        whereArgs: [mediaId],
-        orderBy: 'sort_order');
+    return db.query(
+      'components',
+      where: 'media_id = ?',
+      whereArgs: [mediaId],
+      orderBy: 'sort_order',
+    );
   }
 
   Future<int> insertMedia({

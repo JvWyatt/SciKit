@@ -60,90 +60,97 @@ class _MediumPrepareScreenState extends State<MediumPrepareScreen> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Preparar: ${widget.medium.name}'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('Volumen a preparar',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 12),
-            Form(
-              key: _formKey,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: TextFormField(
-                      controller: _volumeController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
-                      decoration: const InputDecoration(
-                        labelText: 'Volumen a preparar',
-                        prefixIcon: Icon(Icons.speed_outlined),
-                      ),
-                      validator: (v) {
-                        final val = double.tryParse(
-                            (v ?? '').trim().replaceAll(',', '.'));
-                        if (val == null) {
-                          return 'Introduce un volumen válido.';
-                        }
-                        if (val <= 0) {
-                          return 'Debe ser mayor que cero.';
-                        }
-                        return null;
-                      },
-                      onFieldSubmitted: (_) => _calculate(),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: DropdownButtonFormField<VolumeUnit>(
-                      initialValue: _volumeUnit,
-                      decoration: const InputDecoration(
-                        labelText: 'Unidad',
-                        prefixIcon: Icon(Icons.straighten),
-                      ),
-                      items: VolumeUnit.values
-                          .map((u) =>
-                              DropdownMenuItem(value: u, child: Text(u.label)))
-                          .toList(),
-                      onChanged: (u) => setState(() => _volumeUnit = u!),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: _calculate,
-              icon: const Icon(Icons.calculate_outlined),
-              label: const Text('Calcular'),
-            ),
-            if (_results != null) ...[
-              const SizedBox(height: 32),
+      appBar: AppBar(title: Text('Preparar: ${widget.medium.name}')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
               Text(
-                _resultHeader,
+                'Volumen a preparar',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 16),
-              _ResultTable(results: _results!),
-              const SizedBox(height: 8),
-              Text(
-                'Cálculo basado en un volumen base de '
-                '${_formatBaseVolume()}',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: scheme.onSurfaceVariant),
+              const SizedBox(height: 12),
+              Form(
+                key: _formKey,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextFormField(
+                        controller: _volumeController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        decoration: const InputDecoration(
+                          labelText: 'Volumen a preparar',
+                          prefixIcon: Icon(Icons.speed_outlined),
+                        ),
+                        validator: (v) {
+                          final val = double.tryParse(
+                            (v ?? '').trim().replaceAll(',', '.'),
+                          );
+                          if (val == null) {
+                            return 'Introduce un volumen válido.';
+                          }
+                          if (val <= 0) {
+                            return 'Debe ser mayor que cero.';
+                          }
+                          return null;
+                        },
+                        onFieldSubmitted: (_) => _calculate(),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<VolumeUnit>(
+                        initialValue: _volumeUnit,
+                        decoration: const InputDecoration(
+                          labelText: 'Unidad',
+                          prefixIcon: Icon(Icons.straighten),
+                        ),
+                        items: VolumeUnit.values
+                            .map(
+                              (u) => DropdownMenuItem(
+                                value: u,
+                                child: Text(u.label),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (u) => setState(() => _volumeUnit = u!),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(height: 16),
+              FilledButton.icon(
+                onPressed: _calculate,
+                icon: const Icon(Icons.calculate_outlined),
+                label: const Text('Calcular'),
+              ),
+              if (_results != null) ...[
+                const SizedBox(height: 32),
+                Text(
+                  _resultHeader,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 16),
+                _ResultTable(results: _results!),
+                const SizedBox(height: 8),
+                Text(
+                  'Cálculo basado en un volumen base de '
+                  '${_formatBaseVolume()}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -185,9 +192,9 @@ class _ResultTable extends StatelessWidget {
                       '${PreparationCalculator.formatAmount(results[i].amount)} '
                       '${results[i].unitLabel}',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: scheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ],
                 ),

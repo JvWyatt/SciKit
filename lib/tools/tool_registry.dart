@@ -1,4 +1,6 @@
+import 'lab_timers_tool.dart';
 import 'media_library_tool.dart';
+import 'neubauer_tool.dart';
 import 'tool_definition.dart';
 
 /// Registro central de herramientas disponibles en SCIKIT.
@@ -12,6 +14,8 @@ class ToolRegistry {
 
   static const List<ToolDefinition> available = [
     MediaLibraryTool(),
+    LabTimersTool(),
+    NeubauerTool(),
   ];
 
   static ToolDefinition? byId(String id) {

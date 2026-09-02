@@ -25,20 +25,25 @@ class MediaLibraryState extends ChangeNotifier {
       for (final row in rows) {
         final id = row['id'] as int;
         final componentsRows = await _repository.getComponents(id);
-        result.add(Medium(
-          id: id,
-          name: row['name'] as String,
-          baseVolume: (row['base_volume'] as num).toDouble(),
-          baseVolumeUnit:
-              VolumeUnit.fromLabel(row['base_volume_unit'] as String),
-          components: componentsRows
-              .map((c) => Component(
+        result.add(
+          Medium(
+            id: id,
+            name: row['name'] as String,
+            baseVolume: (row['base_volume'] as num).toDouble(),
+            baseVolumeUnit: VolumeUnit.fromLabel(
+              row['base_volume_unit'] as String,
+            ),
+            components: componentsRows
+                .map(
+                  (c) => Component(
                     name: c['name'] as String,
                     amount: (c['amount'] as num).toDouble(),
                     unit: ComponentUnit.fromLabel(c['unit'] as String),
-                  ))
-              .toList(),
-        ));
+                  ),
+                )
+                .toList(),
+          ),
+        );
       }
       _media = result;
       _isLoaded = true;
@@ -70,13 +75,15 @@ class MediaLibraryState extends ChangeNotifier {
       baseVolumeUnit: baseVolumeUnit.label,
       components: components.map((c) => c.toJson()).toList(),
     );
-    _media.add(Medium(
-      id: id,
-      name: name,
-      baseVolume: baseVolume,
-      baseVolumeUnit: baseVolumeUnit,
-      components: List.of(components),
-    ));
+    _media.add(
+      Medium(
+        id: id,
+        name: name,
+        baseVolume: baseVolume,
+        baseVolumeUnit: baseVolumeUnit,
+        components: List.of(components),
+      ),
+    );
     _sort();
     notifyListeners();
   }

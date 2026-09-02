@@ -18,9 +18,12 @@ class MediumEditScreen extends StatefulWidget {
 }
 
 class _BuilderComponent {
-  _BuilderComponent({required String name, required double amount, required this.unit})
-      : nameController = TextEditingController(text: name),
-        amountController = TextEditingController(text: _formatAmount(amount));
+  _BuilderComponent({
+    required String name,
+    required double amount,
+    required this.unit,
+  }) : nameController = TextEditingController(text: name),
+       amountController = TextEditingController(text: _formatAmount(amount));
 
   final TextEditingController nameController;
   final TextEditingController amountController;
@@ -51,15 +54,16 @@ class _MediumEditScreenState extends State<MediumEditScreen> {
     final medium = widget.medium;
     _nameController = TextEditingController(text: medium?.name ?? '');
     _baseVolumeController = TextEditingController(
-      text: medium != null ? _BuilderComponent._formatAmount(medium.baseVolume) : '',
+      text: medium != null
+          ? _BuilderComponent._formatAmount(medium.baseVolume)
+          : '',
     );
     _baseVolumeUnit = medium?.baseVolumeUnit ?? VolumeUnit.ml;
     _components = (medium?.components ?? [])
-        .map((c) => _BuilderComponent(
-              name: c.name,
-              amount: c.amount,
-              unit: c.unit,
-            ))
+        .map(
+          (c) =>
+              _BuilderComponent(name: c.name, amount: c.amount, unit: c.unit),
+        )
         .toList();
     if (_components.isEmpty) {
       _addComponent();
@@ -79,7 +83,9 @@ class _MediumEditScreenState extends State<MediumEditScreen> {
 
   void _addComponent() {
     setState(() {
-      _components.add(_BuilderComponent(name: '', amount: 0, unit: ComponentUnit.g));
+      _components.add(
+        _BuilderComponent(name: '', amount: 0, unit: ComponentUnit.g),
+      );
     });
   }
 
@@ -180,104 +186,118 @@ class _MediumEditScreenState extends State<MediumEditScreen> {
             ),
         ],
       ),
-      body: _isSaving
-          ? const Center(child: CircularProgressIndicator())
-          : Form(
-              key: _formKey,
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                children: [
-                  Text('Información general',
-                      style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _nameController,
-                    textCapitalization: TextCapitalization.sentences,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre del medio',
-                      prefixIcon: Icon(Icons.edit_outlined),
+      body: SafeArea(
+        child: _isSaving
+            ? const Center(child: CircularProgressIndicator())
+            : Form(
+                key: _formKey,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  children: [
+                    Text(
+                      'Información general',
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'El nombre no puede estar vacío.'
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: TextFormField(
-                          controller: _baseVolumeController,
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
-                                  decimal: true),
-                          decoration: const InputDecoration(
-                            labelText: 'Volumen base',
-                            prefixIcon: Icon(Icons.speed_outlined),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _nameController,
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre del medio',
+                        prefixIcon: Icon(Icons.edit_outlined),
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'El nombre no puede estar vacío.'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: TextFormField(
+                            controller: _baseVolumeController,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: 'Volumen base',
+                              prefixIcon: Icon(Icons.speed_outlined),
+                            ),
+                            validator: (v) {
+                              final val = double.tryParse(
+                                (v ?? '').trim().replaceAll(',', '.'),
+                              );
+                              if (val == null) {
+                                return 'Introduce un volumen válido.';
+                              }
+                              if (val <= 0) {
+                                return 'Debe ser mayor que cero.';
+                              }
+                              return null;
+                            },
                           ),
-                          validator: (v) {
-                            final val =
-                                double.tryParse((v ?? '').trim().replaceAll(',', '.'));
-                            if (val == null) {
-                              return 'Introduce un volumen válido.';
-                            }
-                            if (val <= 0) {
-                              return 'Debe ser mayor que cero.';
-                            }
-                            return null;
-                          },
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 2,
-                        child: DropdownButtonFormField<VolumeUnit>(
-                          initialValue: _baseVolumeUnit,
-                          decoration: const InputDecoration(
-                            labelText: 'Unidad',
-                            prefixIcon: Icon(Icons.straighten),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: DropdownButtonFormField<VolumeUnit>(
+                            initialValue: _baseVolumeUnit,
+                            decoration: const InputDecoration(
+                              labelText: 'Unidad',
+                              prefixIcon: Icon(Icons.straighten),
+                            ),
+                            items: VolumeUnit.values
+                                .map(
+                                  (u) => DropdownMenuItem(
+                                    value: u,
+                                    child: Text(u.label),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (u) =>
+                                setState(() => _baseVolumeUnit = u!),
                           ),
-                          items: VolumeUnit.values
-                              .map((u) =>
-                                  DropdownMenuItem(value: u, child: Text(u.label)))
-                              .toList(),
-                          onChanged: (u) => setState(() => _baseVolumeUnit = u!),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Componentes',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    ..._components.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _ComponentEditor(
+                          component: entry.value,
+                          canRemove: _components.length > 1,
+                          onRemove: () => _removeComponent(index),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 4),
+                    OutlinedButton.icon(
+                      onPressed: _addComponent,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Agregar componente'),
+                    ),
+                    const SizedBox(height: 32),
+                    FilledButton.icon(
+                      onPressed: _save,
+                      icon: const Icon(Icons.check),
+                      label: Text(
+                        widget.isEditing ? 'Guardar cambios' : 'Crear medio',
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Text('Componentes', style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  ..._components.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: _ComponentEditor(
-                        component: entry.value,
-                        canRemove: _components.length > 1,
-                        onRemove: () => _removeComponent(index),
-                      ),
-                    );
-                  }),
-                  const SizedBox(height: 4),
-                  OutlinedButton.icon(
-                    onPressed: _addComponent,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Agregar componente'),
-                  ),
-                  const SizedBox(height: 32),
-                  FilledButton.icon(
-                    onPressed: _save,
-                    icon: const Icon(Icons.check),
-                    label: Text(
-                        widget.isEditing ? 'Guardar cambios' : 'Crear medio'),
-                  ),
-                  const SizedBox(height: 8),
-                ],
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }
@@ -331,14 +351,16 @@ class _ComponentEditor extends StatelessWidget {
                   child: TextFormField(
                     controller: component.amountController,
                     keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true),
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(
                       labelText: 'Cantidad',
                       prefixIcon: Icon(Icons.numbers),
                     ),
                     validator: (v) {
-                      final val =
-                          double.tryParse((v ?? '').trim().replaceAll(',', '.'));
+                      final val = double.tryParse(
+                        (v ?? '').trim().replaceAll(',', '.'),
+                      );
                       if (val == null) {
                         return 'Número válido';
                       }
@@ -359,8 +381,10 @@ class _ComponentEditor extends StatelessWidget {
                       prefixIcon: Icon(Icons.straighten),
                     ),
                     items: ComponentUnit.values
-                        .map((u) =>
-                            DropdownMenuItem(value: u, child: Text(u.label)))
+                        .map(
+                          (u) =>
+                              DropdownMenuItem(value: u, child: Text(u.label)),
+                        )
                         .toList(),
                     onChanged: (u) => component.unit = u!,
                   ),

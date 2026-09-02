@@ -8,10 +8,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 class DashboardState extends ChangeNotifier {
   static const _prefsKey = 'scikit.dashboard.added_tools';
 
-  final Set<String> _addedTools = {};
+  final List<String> _addedTools = [];
   bool _isLoaded = false;
 
-  Set<String> get addedTools => Set.unmodifiable(_addedTools);
+  List<String> get addedTools => List.unmodifiable(_addedTools);
 
   bool get isLoaded => _isLoaded;
 
@@ -27,6 +27,7 @@ class DashboardState extends ChangeNotifier {
   }
 
   Future<void> addTool(String toolId) async {
+    if (_addedTools.contains(toolId)) return;
     _addedTools.add(toolId);
     await _persist();
     notifyListeners();
@@ -38,8 +39,18 @@ class DashboardState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reordena una herramienta arrastrándola. `newIndex` ya llega ajustado
+  /// por `onReorderItem` de ReorderableListView.
+  Future<void> reorderTool(int oldIndex, int newIndex) async {
+    if (oldIndex < 0 || oldIndex >= _addedTools.length) return;
+    final item = _addedTools.removeAt(oldIndex);
+    _addedTools.insert(newIndex.clamp(0, _addedTools.length), item);
+    await _persist();
+    notifyListeners();
+  }
+
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(_prefsKey, _addedTools.toList());
+    await prefs.setStringList(_prefsKey, _addedTools);
   }
 }

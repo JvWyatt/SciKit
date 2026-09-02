@@ -22,16 +22,14 @@ class MediaLibraryScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const _MediaListBody(),
+      body: const SafeArea(child: _MediaListBody()),
     );
   }
 
   void _openEditor(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MediumEditScreen(medium: null),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => MediumEditScreen(medium: null)));
   }
 }
 
@@ -95,18 +93,14 @@ class _MediaListBody extends StatelessWidget {
 
   void _openPrepare(BuildContext context, Medium medium) {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MediumPrepareScreen(medium: medium),
-      ),
+      MaterialPageRoute(builder: (_) => MediumPrepareScreen(medium: medium)),
     );
   }
 
   void _openEditorFor(BuildContext context, Medium medium) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => MediumEditScreen(medium: medium),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => MediumEditScreen(medium: medium)));
   }
 }
 
@@ -186,8 +180,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.inventory_2_outlined,
-                size: 64, color: scheme.outline),
+            Icon(Icons.inventory_2_outlined, size: 64, color: scheme.outline),
             const SizedBox(height: 16),
             Text(
               'Sin medios guardados',
@@ -197,9 +190,9 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Agrega un medio para guardar su fórmula y calcular cantidades de preparación.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),

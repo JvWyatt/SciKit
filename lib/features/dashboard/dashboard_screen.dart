@@ -32,9 +32,9 @@ class DashboardScreen extends StatelessWidget {
           IconButton(
             tooltip: 'Configuración',
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SettingsScreen()),
-            ),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
           IconButton(
             tooltip: 'Agregar herramienta',
@@ -43,37 +43,49 @@ class DashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: tools.isEmpty
-          ? const _EmptyState()
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              children: [
-                Text(
-                  'Tu espacio de herramientas científicas',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 16),
-                for (final tool in tools) ...[
-                  _ToolCard(tool: tool),
-                  const SizedBox(height: 12),
-                ],
-                if (dashboard.addedTools.length < ToolRegistry.available.length) ...[
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: () => _openAddTool(context),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Agregar herramienta'),
+      body: SafeArea(
+        child: tools.isEmpty
+            ? const _EmptyState()
+            : ReorderableListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                buildDefaultDragHandles: false,
+                header: Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    'Tu espacio de herramientas científicas',
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
-                ],
-              ],
-            ),
+                ),
+                footer:
+                    dashboard.addedTools.length < ToolRegistry.available.length
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: OutlinedButton.icon(
+                          onPressed: () => _openAddTool(context),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Agregar herramienta'),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+                itemCount: tools.length,
+                onReorderItem: dashboard.reorderTool,
+                itemBuilder: (context, index) {
+                  final tool = tools[index];
+                  return Padding(
+                    key: ValueKey(tool.id),
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ToolCard(tool: tool, index: index),
+                  );
+                },
+              ),
+      ),
     );
   }
 
   void _openAddTool(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AddToolScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const AddToolScreen()));
   }
 }
 
@@ -99,18 +111,16 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               'Aún no has agregado ninguna herramienta.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: scheme.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: scheme.onSurfaceVariant),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
             FilledButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (_) => const AddToolScreen()),
+                  MaterialPageRoute(builder: (_) => const AddToolScreen()),
                 );
               },
               icon: const Icon(Icons.add),
@@ -124,9 +134,10 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _ToolCard extends StatelessWidget {
-  const _ToolCard({required this.tool});
+  const _ToolCard({required this.tool, required this.index});
 
   final ToolDefinition tool;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
@@ -140,6 +151,13 @@ class _ToolCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
+              ReorderableDragStartListener(
+                index: index,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Icon(Icons.drag_indicator, color: scheme.outline),
+                ),
+              ),
               CircleAvatar(
                 backgroundColor: scheme.primaryContainer,
                 foregroundColor: scheme.onPrimaryContainer,
@@ -150,9 +168,11 @@ class _ToolCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(tool.name,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      tool.name,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -188,9 +208,9 @@ class _ToolCard extends StatelessWidget {
   }
 
   void _openTool(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => tool.buildScreen(context)),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => tool.buildScreen(context)));
   }
 
   void _showInfo(BuildContext context) {
@@ -216,7 +236,9 @@ class _ToolCard extends StatelessWidget {
   }
 
   Future<void> _confirmRemove(
-      BuildContext context, DashboardState dashboard) async {
+    BuildContext context,
+    DashboardState dashboard,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(

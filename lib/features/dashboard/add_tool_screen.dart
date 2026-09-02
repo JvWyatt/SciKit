@@ -14,14 +14,16 @@ class AddToolScreen extends StatelessWidget {
     final dashboard = context.watch<DashboardState>();
     return Scaffold(
       appBar: AppBar(title: const Text('Agregar herramienta')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-        children: [
-          for (final tool in ToolRegistry.available) ...[
-            _ToolCard(tool: tool, isAdded: dashboard.isAdded(tool.id)),
-            const SizedBox(height: 12),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: [
+            for (final tool in ToolRegistry.available) ...[
+              _ToolCard(tool: tool, isAdded: dashboard.isAdded(tool.id)),
+              const SizedBox(height: 12),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -39,7 +41,7 @@ class _ToolCard extends StatelessWidget {
     final dashboard = context.read<DashboardState>();
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
         child: Row(
           children: [
             CircleAvatar(
@@ -49,33 +51,56 @@ class _ToolCard extends StatelessWidget {
             ),
             const SizedBox(width: 16),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(tool.name,
-                      style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(
-                    tool.description,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: scheme.onSurfaceVariant),
-                  ),
-                ],
+              child: Text(
+                tool.name,
+                style: Theme.of(context).textTheme.titleMedium,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
+            IconButton(
+              tooltip: 'Información',
+              icon: const Icon(Icons.info_outline),
+              onPressed: () => _showInfo(context),
+            ),
             if (isAdded)
-              const Icon(Icons.check_circle,
-                  color: Colors.green)
+              const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(Icons.check_circle, color: Colors.green),
+              )
             else
-              FilledButton(
-                onPressed: () => dashboard.addTool(tool.id),
-                child: const Text('Agregar'),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilledButton(
+                  onPressed: () => dashboard.addTool(tool.id),
+                  child: const Text('Agregar'),
+                ),
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showInfo(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: CircleAvatar(
+          backgroundColor: scheme.primaryContainer,
+          foregroundColor: scheme.onPrimaryContainer,
+          child: Icon(tool.icon),
+        ),
+        title: Text(tool.name),
+        content: Text(tool.description, textAlign: TextAlign.start),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
       ),
     );
   }
