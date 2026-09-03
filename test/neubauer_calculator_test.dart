@@ -11,9 +11,9 @@ void main() {
       );
       // promedio = 100/4 = 25 células/cuadro
       expect(r.average, closeTo(25, 1e-9));
-      // conc = promedio / volumen(1e-4 mL) * dilución
-      expect(r.concentration, closeTo(25 / 1.0e-4, 1e-6));
-      expect(r.formattedConcentration, '250000');
+      // conc = promedio × 10⁴ × dilución
+      expect(r.concentration, closeTo(25 * 1.0e4, 1e-6));
+      expect(r.formattedConcentration, '250 000');
     });
 
     test('promedio con 8 cuadros', () {
@@ -31,15 +31,32 @@ void main() {
         squares: 4,
         dilution: 10,
       );
-      expect(r.concentration, closeTo(25 / 1.0e-4 * 10, 1e-6));
+      expect(r.concentration, closeTo(25 * 1.0e4 * 10, 1e-6));
     });
 
-    test('formula equivalente a promedio/volumen*dilución', () {
+    test('cuadros 1, 5 y 8 calculan el promedio correcto', () {
+      final cells = 200;
+      for (final (squares, expectedAvg) in [(1, 200.0), (5, 40.0), (8, 25.0)]) {
+        final r = NeubauerCalculator.calculate(
+          totalCells: cells,
+          squares: squares,
+          dilution: 1,
+        );
+        expect(r.average, closeTo(expectedAvg, 1e-9), reason: 'cuadros=$squares');
+        expect(
+          r.concentration,
+          closeTo(expectedAvg * 1.0e4, 1e-6),
+          reason: 'cuadros=$squares',
+        );
+      }
+    });
+
+    test('formula equivalente a promedio*10^4*dilución', () {
       final cells = 320;
       final squares = 8;
       final dilution = 2.0;
       final avg = cells / squares;
-      final expected = (avg / NeubauerCalculator.volumeOfOneSquareMl) * dilution;
+      final expected = avg * 1.0e4 * dilution;
       final r = NeubauerCalculator.calculate(
         totalCells: cells,
         squares: squares,
@@ -80,7 +97,17 @@ void main() {
         squares: 4,
         dilution: 1,
       );
-      expect(r.formattedConcentration, '250000');
+      expect(r.formattedConcentration, '250 000');
+    });
+
+    test('concentración agrupa cifras con espacio cada 3 dígitos', () {
+      // 1000 células / 1 cuadro × 10⁴ = 10 000 000
+      final r = NeubauerCalculator.calculate(
+        totalCells: 1000,
+        squares: 1,
+        dilution: 1,
+      );
+      expect(r.formattedConcentration, '10 000 000');
     });
 
     test('promedio muestra decimales cuando es necesario', () {

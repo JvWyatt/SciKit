@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../../state/theme_controller.dart';
 
+/// Versión de la aplicación. Debe mantenerse en línea con `pubspec.yaml`.
+const _appVersion = '0.0.3';
+
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
@@ -38,6 +41,16 @@ class SettingsScreen extends StatelessWidget {
                       ),
                   ],
                 ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text('Información', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('Versión de la aplicación'),
+                subtitle: Text('v$_appVersion'),
               ),
             ),
           ],

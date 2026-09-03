@@ -2,7 +2,16 @@ import 'package:flutter/foundation.dart';
 
 import '../../../logic/neubauer_calculator.dart';
 
-enum NeubauerSquares { four, eight }
+enum NeubauerSquares { one, four, five, eight }
+
+extension NeubauerSquaresCount on NeubauerSquares {
+  int get count => switch (this) {
+    NeubauerSquares.one => 1,
+    NeubauerSquares.four => 4,
+    NeubauerSquares.five => 5,
+    NeubauerSquares.eight => 8,
+  };
+}
 
 class NeubauerState extends ChangeNotifier {
   int _totalCells = 0;
@@ -13,7 +22,7 @@ class NeubauerState extends ChangeNotifier {
   NeubauerSquares get squares => _squares;
   double get dilution => _dilution;
 
-  int get squaresCount => _squares == NeubauerSquares.four ? 4 : 8;
+  int get squaresCount => _squares.count;
 
   double get average => _totalCells / squaresCount;
   bool get canCalculate => _totalCells > 0;
@@ -37,6 +46,15 @@ class NeubauerState extends ChangeNotifier {
 
   void setSquares(NeubauerSquares value) {
     _squares = value;
+    notifyListeners();
+  }
+
+  void setSquaresCount(int count) {
+    final s = NeubauerSquares.values.firstWhere(
+      (c) => c.count == count,
+      orElse: () => _squares,
+    );
+    _squares = s;
     notifyListeners();
   }
 

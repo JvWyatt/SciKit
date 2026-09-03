@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -27,10 +29,14 @@ class NeubauerCalculatorScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             _CounterCard(state: state),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
             _InputsCard(state: state),
-            const SizedBox(height: 24),
-            if (result != null) _ResultCard(result: result),
+            const SizedBox(height: 16),
+            if (result != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: _ResultCard(result: result),
+              ),
           ],
         ),
       ),
@@ -38,61 +44,108 @@ class NeubauerCalculatorScreen extends StatelessWidget {
   }
 }
 
-class _CounterCard extends StatelessWidget {
+class _CounterCard extends StatefulWidget {
   const _CounterCard({required this.state});
 
   final NeubauerState state;
 
   @override
+  State<_CounterCard> createState() => _CounterCardState();
+}
+
+class _CounterCardState extends State<_CounterCard> {
+  late final TextEditingController _manualController;
+
+  @override
+  void initState() {
+    super.initState();
+    _manualController = TextEditingController(text: '${widget.state.totalCells}');
+  }
+
+  @override
+  void dispose() {
+    _manualController.dispose();
+    super.dispose();
+  }
+
+  void _applyManual() {
+    final value = int.tryParse(_manualController.text.trim());
+    widget.state.setTotalCells(value ?? 0);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final state = widget.state;
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Conteo de células',
-              style: Theme.of(context).textTheme.titleMedium,
+            TextField(
+              controller: _manualController,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              decoration: const InputDecoration(
+                labelText: 'Conteo',
+                border: UnderlineInputBorder(),
+              ),
+              style: Theme.of(context).textTheme.bodyLarge,
+              onChanged: (_) => _applyManual(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
             Text(
-              '${state.totalCells}',
-              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+              '${state.totalCells} células',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: scheme.primary,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Promedio por cuadro: ${_format(state.average)}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: state.incrementCell,
-              icon: const Icon(Icons.add),
-              label: const Text('Tocar para contar (+1)'),
             ),
             const SizedBox(height: 8),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                OutlinedButton.icon(
-                  onPressed: state.decrementCell,
-                  icon: const Icon(Icons.remove),
-                  label: const Text('Corregir'),
+                Expanded(
+                  child: SizedBox(
+                    height: 64,
+                    child: FilledButton.tonal(
+                      onPressed: state.decrementCell,
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        '−',
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () => state.setTotalCells(0),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Limpiar'),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 64,
+                    child: FilledButton(
+                      onPressed: state.incrementCell,
+                      style: FilledButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Text(
+                        '+1',
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -100,16 +153,6 @@ class _CounterCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _format(double v) {
-    if (v == v.roundToDouble()) {
-      return v.toInt().toString();
-    }
-    return v
-        .toStringAsFixed(6)
-        .replaceAll(RegExp(r'0+$'), '')
-        .replaceAll(RegExp(r'\.$'), '');
   }
 }
 
@@ -126,18 +169,19 @@ class _InputsCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Parámetros', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'Cuadrantes contados',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 16),
             SegmentedButton<NeubauerSquares>(
-              segments: const [
-                ButtonSegment(
-                  value: NeubauerSquares.four,
-                  label: Text('4 cuadros'),
-                ),
-                ButtonSegment(
-                  value: NeubauerSquares.eight,
-                  label: Text('8 cuadros'),
-                ),
+              segments: [
+                for (final s in NeubauerSquares.values)
+                  ButtonSegment(
+                    value: s,
+                    label: Text('${s.count}'),
+                    tooltip: '${s.count} cuadrante(s)',
+                  ),
               ],
               selected: {state.squares},
               onSelectionChanged: (s) => state.setSquares(s.first),
@@ -151,6 +195,8 @@ class _InputsCard extends StatelessWidget {
   }
 }
 
+enum _DilutionMode { normal, power }
+
 class _DilutionField extends StatefulWidget {
   const _DilutionField({required this.state});
 
@@ -161,13 +207,17 @@ class _DilutionField extends StatefulWidget {
 }
 
 class _DilutionFieldState extends State<_DilutionField> {
+  _DilutionMode _mode = _DilutionMode.normal;
   late final TextEditingController _controller;
   bool _invalid = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: _format(widget.state.dilution));
+    _controller = TextEditingController(
+      text: _formatForMode(_mode, widget.state.dilution),
+    );
+    _syncControllerFromDilution();
   }
 
   @override
@@ -175,6 +225,8 @@ class _DilutionFieldState extends State<_DilutionField> {
     _controller.dispose();
     super.dispose();
   }
+
+  bool get _powerMode => _mode == _DilutionMode.power;
 
   String _format(double v) {
     if (v == v.roundToDouble()) {
@@ -186,28 +238,92 @@ class _DilutionFieldState extends State<_DilutionField> {
         .replaceAll(RegExp(r'\.$'), '');
   }
 
+  String _formatForMode(_DilutionMode mode, double value) {
+    if (mode == _DilutionMode.power) {
+      final exp = (math.log(value) / math.log(10)).round();
+      if (value > 0 && (math.pow(10, exp).toDouble() - value).abs() < 1e-9) {
+        return '$exp';
+      }
+      return '0';
+    }
+    return _format(value);
+  }
+
+  void _switchMode(_DilutionMode mode) {
+    final dilution = _currentFactor();
+    setState(() => _mode = mode);
+    _controller.text = _formatForMode(mode, dilution ?? widget.state.dilution);
+  }
+
+  double? _currentFactor() {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return null;
+    final value = double.tryParse(text.replaceAll(',', '.'));
+    if (value == null || value <= 0) return null;
+    return _powerMode ? math.pow(10, value.toInt()).toDouble() : value;
+  }
+
   void _submit() {
-    final value = double.tryParse(_controller.text.trim().replaceAll(',', '.'));
-    if (value == null || value <= 0) {
+    final factor = _currentFactor();
+    if (factor == null) {
       setState(() => _invalid = true);
     } else {
       setState(() => _invalid = false);
-      widget.state.setDilution(value);
+      widget.state.setDilution(factor);
     }
+  }
+
+  void _syncControllerFromDilution() {
+    _controller.text = _formatForMode(_mode, widget.state.dilution);
   }
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
-      controller: _controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: InputDecoration(
-        labelText: 'Factor de dilución',
-        prefixIcon: const Icon(Icons.science_outlined),
-        errorText: _invalid ? 'Debe ser un número mayor que cero.' : null,
-      ),
-      onFieldSubmitted: (_) => _submit(),
-      onEditingComplete: _submit,
+    final hint = _powerMode
+        ? 'n → 2'
+        : '1, 2, 10, 100…';
+    final prefix = _powerMode ? '10 ^ (' : null;
+    final suffix = _powerMode ? ')' : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Factor de dilución',
+            style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: 8),
+        SegmentedButton<_DilutionMode>(
+          showSelectedIcon: false,
+          segments: const [
+            ButtonSegment(value: _DilutionMode.normal, label: Text('Número')),
+            ButtonSegment(
+              value: _DilutionMode.power,
+              label: Text('10 ^ (n)'),
+            ),
+          ],
+          selected: {_mode},
+          onSelectionChanged: (s) => _switchMode(s.first),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: 180,
+          child: TextField(
+            controller: _controller,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: _powerMode ? 'Exponente' : 'Valor',
+              hintText: hint,
+              prefixIcon: const Icon(Icons.science_outlined),
+              prefixText: prefix,
+              suffixText: suffix,
+              errorText: _invalid ? 'Debe ser un número mayor que cero.' : null,
+            ),
+            onChanged: (_) {
+              if (_invalid) setState(() => _invalid = false);
+            },
+            onSubmitted: (_) => _submit(),
+            onEditingComplete: _submit,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -229,6 +345,7 @@ class _ResultCard extends StatelessWidget {
           children: [
             Text(
               'Concentración',
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: scheme.onPrimaryContainer,
               ),
@@ -236,21 +353,47 @@ class _ResultCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               '${result.formattedConcentration} células/mL',
+              textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
                 color: scheme.onPrimaryContainer,
               ),
             ),
             const SizedBox(height: 16),
-            _ResultRow(label: 'Conteo total', value: '${result.totalCells}'),
-            _ResultRow(label: 'Cuadros', value: '${result.squares}'),
-            _ResultRow(
-              label: 'Promedio por cuadro',
-              value: result.formattedAverage,
-            ),
-            _ResultRow(
-              label: 'Factor de dilución',
-              value: _format(result.dilution),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 6,
+                  child: Column(
+                    children: [
+                      _ResultRow(
+                        label: 'Cél. contadas',
+                        value: '${result.totalCells}',
+                      ),
+                      _ResultRow(
+                        label: 'Prom. por cuadr.',
+                        value: result.formattedAverage,
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  flex: 4,
+                  child: Column(
+                    children: [
+                      _ResultRow(
+                        label: 'Cuadrante',
+                        value: '${result.squares}',
+                      ),
+                      _ResultRow(
+                        label: 'Fx de dilución',
+                        value: _format(result.dilution),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -279,19 +422,21 @@ class _ResultRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: scheme.onPrimaryContainer),
+            '$label:',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: scheme.onPrimaryContainer.withValues(alpha: 0.75),
+            ),
           ),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w600,
               color: scheme.onPrimaryContainer,
             ),

@@ -15,9 +15,26 @@ class NeubauerResult {
   final double concentration;
 
   /// Formato limpio en células/mL (sin decimales innecesarios).
-  String get formattedConcentration => _format(concentration);
+  String get formattedConcentration => _formatConcentration(concentration);
 
   String get formattedAverage => _format(average);
+
+  /// Formatea un valor insertando un espacio cada 3 cifras en la parte entera
+  /// (p. ej. `1 000 000`), conservando los decimales si los hay.
+  static String _formatConcentration(double value) {
+    final text = _format(value);
+    final dot = text.indexOf('.');
+    final intPart = dot < 0 ? text : text.substring(0, dot);
+    final decPart = dot < 0 ? '' : text.substring(dot);
+    final buffer = StringBuffer();
+    for (var i = 0; i < intPart.length; i++) {
+      if (i > 0 && (intPart.length - i) % 3 == 0) {
+        buffer.write(' ');
+      }
+      buffer.write(intPart[i]);
+    }
+    return '$buffer$decPart';
+  }
 
   static String _format(double value) {
     if (value == value.roundToDouble() && value.abs() < 1e15) {
@@ -36,12 +53,10 @@ class NeubauerResult {
 ///
 /// Independiente de la UI para poder probarse de forma aislada.
 ///
-/// Fórmula de trabajo (a revisar en el futuro, según SPEC):
-///   Concentración (células/mL) =
-///       [totalDeCélulas ÷ (volumenDeUnCuadro × nºCuadros)] × factorDeDilución
-///
-/// Equivalente a lo estándar:
-///   Concentración = (promedio por cuadro × dilución) ÷ volumenDeUnCuadro
+/// Fórmula usada (según SPEC):
+///   Promedio = totalDeCélulas ÷ nºCuadros
+///   Concentración (células/mL) = promedio × 10⁴ × factorDeDilución
+///   (cada cuadro de esquina equivale a 1,0 × 10⁻⁴ mL = 10⁴ por mL)
 class NeubauerCalculator {
   NeubauerCalculator._();
 
@@ -66,9 +81,10 @@ class NeubauerCalculator {
       throw ArgumentError.value(dilution, 'dilution', 'Debe ser mayor que cero');
     }
 
+    // Promedio = total de células contadas ÷ número de cuadros contados
     final average = totalCells / squares;
-    final concentration =
-        (totalCells / (volumeOfOneSquareMl * squares)) * dilution;
+    // Concentración (células/mL) = promedio × 10⁴ × factor de dilución
+    final concentration = average * 1.0e4 * dilution;
 
     return NeubauerResult(
       totalCells: totalCells,
